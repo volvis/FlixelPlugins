@@ -1,14 +1,13 @@
 package flixel.text;
 import flash.display.BitmapData;
+import flash.display.BitmapDataChannel;
+import flash.display.Graphics;
 import flash.geom.Point;
 import flash.geom.Rectangle;
-import haxe.Int64;
-import flixel.util.FlxMath;
+import flixel.util.FlxColor;
 import haxe.ds.Vector;
 import openfl.Assets;
-import flixel.util.FlxColor;
-import flash.display.BitmapDataChannel;
-import flixel.util.FlxColorUtil;
+import openfl.display.Tilesheet;
 
 /**
  * ...
@@ -18,18 +17,23 @@ class TempestaSeven
 {
 	private static inline var MIN_CODE:Int = 33;
 	private static inline var MAX_CODE:Int = 127;
+	
 	private static var font:Font;
 	private static var characters:Vector<Character>;
-	private static var x:Int;
 	
-	public static function render(Text:String, Color:Int = FlxColor.WHITE):BitmapData
+	private static var tilesheet:Tilesheet;
+	
+	public static function render(Text:String, Graphic:Graphics, X:Float = 0, Y:Float = 0, Color:Int = FlxColor.WHITE):Void
 	{
 		init();
+		
+		// Store previous character code for kerning
 		var prev:Int = -1;
+		
 		var drawCommands:Vector<Int> = new Vector<Int>(Text.length * 2);
 		var width:Int = 0;
 		var height:Int = 0;
-		x = 0;
+		var x:Int = 0;
 		for (charIndex in 0...Text.length)
 		{
 			var charCode:Int = Text.charCodeAt(charIndex);
@@ -44,46 +48,40 @@ class TempestaSeven
 			prev = charCode;
 		}
 		
-		var bmpData:BitmapData = new BitmapData(x, 12, true, 0x00ffffff);
+		//var graphics:Graphics = new Graphics();
 		
-		var map:BitmapData = Assets.getBitmapData("flixel/img/debugger/TempestaSeven.png");
-		var cl:BitmapData = new BitmapData(map.width, map.height, true, Color);
+		//var bmpData:BitmapData = new BitmapData(x, 12, true, 0x00ffffff);
 		
-		var source:Rectangle = new Rectangle();
-		var target:Point = new Point();
-		var alphaT:Point = new Point();
+		var drawCalls:Array<Float> = new Array<Float>();
+		
 		for (charIndex in 0...Text.length)
 		{
 			var row:Int = charIndex * 2;
-			
 			var character:Character = characters.get(drawCommands.get(row));
-			target.x = drawCommands.get(row + 1) + character.xoffset();
-			target.y = character.yoffset();
-			source.x = character.x();
-			source.y = character.y();
-			source.width = character.width();
-			source.height = character.height();
-			bmpData.copyPixels(map, source, target);
 			
-			target.x = target.y = source.x = source.y = 0;
-			source.width = bmpData.width;
-			source.height = bmpData.height;
-			bmpData.copyChannel(cl, source, target, BitmapDataChannel.RED, BitmapDataChannel.RED);
-			bmpData.copyChannel(cl, source, target, BitmapDataChannel.GREEN, BitmapDataChannel.GREEN);
-			bmpData.copyChannel(cl, source, target, BitmapDataChannel.BLUE, BitmapDataChannel.BLUE);
+			drawCalls.push( drawCommands.get(row + 1) + character.xoffset() + X );
+			drawCalls.push( character.yoffset() + Y );
+			drawCalls.push( drawCommands.get(row) - MIN_CODE );
 		}
-		return bmpData;
+		
+		tilesheet.drawTiles(Graphic, drawCalls, false);
 	}
 	
-	public static function init():Void
+	private static function init():Void
 	{
 		if (font != null) return;
+		
 		font = new Font(Assets.getText("flixel/img/debugger/TempestaSeven.fnt"));
-		trace(font);
+		
+		tilesheet = new Tilesheet(Assets.getBitmapData("flixel/img/debugger/TempestaSeven.png"));
+		
 		characters = new Vector<Character>(MAX_CODE);
 		for (charID in MIN_CODE...MAX_CODE)
 		{
-			characters.set(charID, font.getCharacter(charID));
+			var char:Character = font.getCharacter(charID);
+			tilesheet.addTileRect(char.getRectangle());
+			//tilesheet.drawTiles
+			characters.set(charID, char);
 		}
 	}
 }
@@ -142,6 +140,11 @@ abstract Character(Vector<Int>)
 	inline function new(V)
 	{
 		this = V;
+	}
+	
+	public inline function getRectangle():Rectangle
+	{
+		return new Rectangle(x(), y(), width(), height());
 	}
 	
 	public inline function x():Int

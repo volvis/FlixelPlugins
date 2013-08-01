@@ -177,11 +177,8 @@ abstract DebugShape(Vector<Int>)
 			case TEXT:
 				var x:Float = getStartX() - Camera.scroll.x;
 				var y:Float = getStartY() - Camera.scroll.y;
-				var bmp:BitmapData = TempestaSeven.render(VisualDebug.textStack[getText()], getColorRGBA());
-				var m:Matrix = new Matrix(1, 0, 0, 1, x, y);
-				gfx.beginBitmapFill(bmp, m, false, false);
-				gfx.drawRect(x, y, bmp.width, bmp.height);
-				gfx.endFill();
+				var text:String = VisualDebug.textStack[getText()];
+				TempestaSeven.render(text, gfx, x, y);
 			default: null;
 		}
 		
