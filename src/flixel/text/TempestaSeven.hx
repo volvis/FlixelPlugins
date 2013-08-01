@@ -10,7 +10,7 @@ import openfl.Assets;
 import openfl.display.Tilesheet;
 
 /**
- * ...
+ * Helper class for drawing text on designated Graphics
  * @author Pekka Heikkinen
  */
 class TempestaSeven
@@ -18,78 +18,70 @@ class TempestaSeven
 	private static inline var MIN_CODE:Int = 33;
 	private static inline var MAX_CODE:Int = 127;
 	
-	private static var font:Font;
 	private static var characters:Vector<Character>;
-	
+	private static var font:Font;
 	private static var tilesheet:Tilesheet;
 	
-	public static function render(Text:String, Graphic:Graphics, X:Float = 0, Y:Float = 0, Color:Int = FlxColor.WHITE):Void
+	/**
+	 * Draws text on graphic at given coordinates
+	 * @param	Text
+	 * @param	Graphic
+	 * @param	X
+	 * @param	Y
+	 */
+	public static function render(Text:String, Graphic:Graphics, X:Float = 0, Y:Float = 0):Void
 	{
-		init();
-		
-		// Store previous character code for kerning
-		var prev:Int = -1;
-		
-		var drawCommands:Vector<Int> = new Vector<Int>(Text.length * 2);
-		var width:Int = 0;
-		var height:Int = 0;
-		var x:Int = 0;
-		for (charIndex in 0...Text.length)
+		if (font == null)
 		{
-			var charCode:Int = Text.charCodeAt(charIndex);
-			var kerning:Int = font.getKerning(prev, charCode);
-			x += kerning;
-			var character:Character = characters.get(charCode);
-			var row:Int = charIndex * 2;
-			drawCommands.set( row, charCode );
-			drawCommands.set( row + 1, x );
-			var advance:Int = character.xadvance();
-			x += advance;
-			prev = charCode;
+			font = new Font(Assets.getText("flixel/img/debugger/TempestaSeven.fnt"));
+			tilesheet = new Tilesheet(Assets.getBitmapData("flixel/img/debugger/TempestaSeven.png"));
+			
+			characters = new Vector<Character>(MAX_CODE);
+			for (charID in MIN_CODE...MAX_CODE)
+			{
+				var char:Character = font.getCharacter(charID);
+				tilesheet.addTileRect(char.getRectangle());
+				characters.set(charID, char);
+			}
 		}
 		
-		//var graphics:Graphics = new Graphics();
-		
-		//var bmpData:BitmapData = new BitmapData(x, 12, true, 0x00ffffff);
-		
+		var previousCharCode:Int = -1;
 		var drawCalls:Array<Float> = new Array<Float>();
+		var characterPosition:Int = 0;
 		
 		for (charIndex in 0...Text.length)
 		{
-			var row:Int = charIndex * 2;
-			var character:Character = characters.get(drawCommands.get(row));
+			var currentCharCode:Int = Text.charCodeAt(charIndex);
 			
-			drawCalls.push( drawCommands.get(row + 1) + character.xoffset() + X );
+			if (currentCharCode < MIN_CODE || currentCharCode > MAX_CODE)
+			{
+				characterPosition += 3;
+				continue;
+			}
+			var character:Character = characters.get(currentCharCode);
+			
+			characterPosition += font.getKerning(previousCharCode, currentCharCode);
+			
+			drawCalls.push( characterPosition + character.xoffset() + X );
 			drawCalls.push( character.yoffset() + Y );
-			drawCalls.push( drawCommands.get(row) - MIN_CODE );
+			drawCalls.push( currentCharCode - MIN_CODE );
+			
+			characterPosition += character.xadvance();
 		}
 		
 		tilesheet.drawTiles(Graphic, drawCalls, false);
 	}
 	
-	private static function init():Void
-	{
-		if (font != null) return;
-		
-		font = new Font(Assets.getText("flixel/img/debugger/TempestaSeven.fnt"));
-		
-		tilesheet = new Tilesheet(Assets.getBitmapData("flixel/img/debugger/TempestaSeven.png"));
-		
-		characters = new Vector<Character>(MAX_CODE);
-		for (charID in MIN_CODE...MAX_CODE)
-		{
-			var char:Character = font.getCharacter(charID);
-			tilesheet.addTileRect(char.getRectangle());
-			//tilesheet.drawTiles
-			characters.set(charID, char);
-		}
-	}
 }
 
+/**
+ * Abstract structure for reading trimmed data from FNT files
+ */
 abstract Font(String)
 {
 	public inline function new (V:String)
 	{
+		// Trim duplicate whitespace for easier reading
 		var str:StringBuf = new StringBuf();
 		var lastChar:Int = 0;
 		var curChar:Int = 0;

@@ -74,7 +74,7 @@ class VisualDebug extends FlxBasic
 		}
 	}
 	
-	public function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = FlxColor.WHITE):Void
+	public function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = 0xffffffff, Print:Bool = false):Void
 	{
 		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
 		var s:DebugShape = new DebugShape();
@@ -84,9 +84,16 @@ class VisualDebug extends FlxBasic
 		s.setColor(Color);
 		s.setDiameter(Diameter);
 		stack.push(s);
+		
+		if (Print)
+		{
+			X = Math.ffloor(X);
+			Y = Math.ffloor(Y);
+			drawText(X + 3, Y - 12, 'X:$X Y:$Y');
+		}
 	}
 	
-	public function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = FlxColor.WHITE, Print:Bool = false):Void
+	public function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = 0xffffffff, Print:Bool = false):Void
 	{
 		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
 		var s:DebugShape = new DebugShape();
@@ -96,16 +103,22 @@ class VisualDebug extends FlxBasic
 		s.setColor(Color);
 		s.setDiameter(Radius*2);
 		stack.push(s);
+		
+		if (Print)
+		{
+			X = Math.ffloor(X);
+			Y = Math.ffloor(Y);
+			drawText(X + 3, Y - 12, 'X:$X Y:$Y');
+		}
 	}
 	
-	public function drawText(X:Float, Y:Float, Text:String, Color:Int = FlxColor.WHITE):Void
+	public function drawText(X:Float, Y:Float, Text:String):Void
 	{
 		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
 		var s:DebugShape = new DebugShape();
 		s.setShape(DebugShape.TEXT);
 		s.setStartX(Std.int(X));
 		s.setStartY(Std.int(Y));
-		s.setColor(Color);
 		s.setText(textStack.length);
 		textStack.push(Text);
 		stack.push(s);
