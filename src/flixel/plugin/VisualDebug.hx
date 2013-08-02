@@ -4,6 +4,7 @@ import flash.display.Graphics;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.text.TempestaSeven;
 import flixel.util.FlxColorUtil;
 import flixel.util.FlxSpriteUtil;
@@ -284,6 +285,40 @@ class VisualDebug extends FlxBasic
 			Y = Math.ffloor(Y);
 			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
 		}
+	}
+	
+	/**
+	 * Draws an animated hilight around object
+	 * @param	Object	FlxSprite object to hilight
+	 * @param	Length	Length of the hilight edge
+	 * @param	Color	Color of the line. Compatible with FlxColor values.
+	 */
+	public static function hilight(Object:FlxSprite, Length:Int = 4, Color:Int = -1):Void
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		
+		if (Color == -1) Color = defaultColor;
+		Color = FlxColorUtil.RGBAtoRGB(Color);
+		
+		var x1:Int = Std.int(Object.x);
+		var y1:Int = Std.int(Object.y);
+		var x2:Int = Std.int(Object.x+Object.width);
+		var y2:Int = Std.int(Object.y+Object.height);
+		
+		var offset:Int = 2 + (Date.now().getSeconds() % 2);
+		
+		inst.add(LINE( x1 - offset, y1 - offset, x1 - offset, y1 - offset + Length, Color, 0 ));
+		inst.add(LINE( x1 - offset, y1 - offset, x1 - offset + Length, y1 - offset, Color, 0 ));
+		
+		inst.add(LINE( x1 - offset, y2 + offset, x1 - offset, y2 + offset - Length + 1, Color, 0 ));
+		inst.add(LINE( x1 - offset, y2 + offset, x1 - offset + Length, y2 + offset, Color, 0 ));
+		
+		inst.add(LINE( x2 + offset, y1 - offset, x2 + offset, y1 - offset + Length, Color, 0 ));
+		inst.add(LINE( x2 + offset, y1 - offset, x2 + offset - Length + 1, y1 - offset, Color, 0 ));
+		
+		inst.add(LINE( x2 + offset, y2 + offset+1, x2 + offset, y2 + offset - Length + 1, Color, 0 ));
+		inst.add(LINE( x2 + offset, y2 + offset, x2 + offset - Length + 1, y2 + offset, Color, 0 ));
 	}
 	
 }
