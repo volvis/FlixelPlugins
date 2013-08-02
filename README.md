@@ -35,3 +35,9 @@ Every shape can be given an age so you could, for example, track the flight path
 	{
 		VisualDebug.drawLine(hb.x, hb.y, hb.last.x, hb.last.y, FlxColor.GRAY, 2.0);
 	}
+
+![Example](VisualDebug_Hilight.png)
+
+You can use VisualDebug.hilight() to bring focus to individual FlxObjects.
+
+	VisualDebug.hilight(hb);

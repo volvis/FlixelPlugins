@@ -4,7 +4,7 @@ import flash.display.Graphics;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
-import flixel.FlxSprite;
+import flixel.FlxObject;
 import flixel.text.TempestaSeven;
 import flixel.util.FlxColorUtil;
 import flixel.util.FlxSpriteUtil;
@@ -99,7 +99,6 @@ class VisualDebug extends FlxBasic
 					var offset:Float = size/2;
 					gfx.beginFill(color, 0.5);
 					gfx.lineStyle(1, color);
-					//gfx.drawRect(screenX - offset, screenY - offset, size, size);
 					gfx.drawCircle(screenX, screenY, size);
 					gfx.endFill();
 					if (age > 0) add(POINT(x, y, size, color, age));
@@ -293,7 +292,7 @@ class VisualDebug extends FlxBasic
 	 * @param	Length	Length of the hilight edge
 	 * @param	Color	Color of the line. Compatible with FlxColor values.
 	 */
-	public static function hilight(Object:FlxSprite, Length:Int = 4, Color:Int = -1):Void
+	public static function hilight(Object:FlxObject, Length:Int = 4, Color:Int = -1):Void
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
