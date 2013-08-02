@@ -147,7 +147,14 @@ class VisualDebug extends FlxBasic
 		#end
 	}
 	
-	
+	/**
+	 * Draw a point on screen
+	 * @param	X	The X coordinate in world space
+	 * @param	Y	The Y coordinate in world space
+	 * @param	Diameter	The size of the shape
+	 * @param	Color	Color of the shape. Compatible with FlxColor values
+	 * @param	Print	Whether to print the coordinates next to the point
+	 */
 	public static function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false):Void
 	{
 		var inst:VisualDebug = instance();
@@ -164,6 +171,14 @@ class VisualDebug extends FlxBasic
 		}
 	}
 	
+	/**
+	 * Draw a cross on screen
+	 * @param	X	The X coordinate in world space
+	 * @param	Y	The Y coordinate in world space
+	 * @param	Radius	The size of the shape
+	 * @param	Color	Color of the shape. Compatible with FlxColor values.
+	 * @param	Print	Whether to print the coordinates next to the cross
+	 */
 	public static function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false):Void
 	{
 		var inst:VisualDebug = instance();
@@ -179,6 +194,12 @@ class VisualDebug extends FlxBasic
 		}
 	}
 	
+	/**
+	 * Prints text on screen
+	 * @param	X	The X coordinate in world space
+	 * @param	Y	The Y coordinate in world space
+	 * @param	Text	The text to print out
+	 */
 	public static function drawText(X:Float, Y:Float, Text:String):Void
 	{
 		var inst:VisualDebug = instance();
@@ -186,6 +207,16 @@ class VisualDebug extends FlxBasic
 		inst.add(TEXT(X, Y, Text));
 	}
 	
+	/**
+	 * Draw a rectangle on screen
+	 * @param	X	The X coordinate in world space
+	 * @param	Y	The Y coordinate in world space
+	 * @param	Width	Width of the rectangle
+	 * @param	Height	Height of the rectangle
+	 * @param	Color	Color of the shape. Compatible with FlxColor values.
+	 * @param	Opacity	The opacity of the fill
+	 * @param	Print	Text to print above the rectangle
+	 */
 	public static function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null):Void
 	{
 		var inst:VisualDebug = instance();
@@ -199,6 +230,14 @@ class VisualDebug extends FlxBasic
 		}
 	}
 	
+	/**
+	 * Draw a line on screen
+	 * @param	StartX	Starting X coordinate in world space
+	 * @param	StartY	Starting Y coordinate in world space
+	 * @param	EndX	Ending X coordinate in world space
+	 * @param	EndY	Ending Y coordinate in world space
+	 * @param	Color	Color of the line. Compatible with FlxColor values.
+	 */
 	public static function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1)
 	{
 		var inst:VisualDebug = instance();
