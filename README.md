@@ -27,7 +27,7 @@ How to use:
 
 ### Misc examples
 
-![Example](VisualDebug_age.png)
+![Example](VisualDebug_Age.png)
 
 Every shape can be given an age so you could, for example, track the flight path of a shape.
 
