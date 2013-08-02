@@ -72,51 +72,64 @@ class VisualDebug extends FlxBasic
 		var gfx:Graphics = Camera._debugLayer.graphics;
 		#end
 		
-		var s:Shapes = stack.shift();
+		// Work on a copy so we can add new draw commands for the next round as we go through the list
+		var copy:Array<Shapes> = stack.copy();
+		stack = new Array<Shapes>();
+		
+		var s:Shapes = copy.shift();
 		while(s != null)
 		{
 			switch (s)
 			{
-				case POINT(x, y, size, color):
-					x -= Camera.scroll.x;
-					y -= Camera.scroll.y;
+				case POINT(x, y, size, color, age):
+					var screenX:Float = x - Camera.scroll.x;
+					var screenY:Float = y - Camera.scroll.y;
+					age -= FlxG.elapsed;
 					var offset:Float = size/2;
 					gfx.beginFill(color, 0.5);
 					gfx.lineStyle(1, color);
-					gfx.drawRect(x - offset, y - offset, size, size);
+					gfx.drawRect(screenX - offset, screenY - offset, size, size);
 					gfx.endFill();
-				case CROSS(x, y, size, color):
-					x = Math.ffloor( x - Camera.scroll.x )+0.01;
-					y -= - Camera.scroll.y;
+					if (age > 0) add(POINT(x, y, size, color, age));
+				case CROSS(x, y, size, color, age):
+					var screenX:Float = Math.ffloor( x - Camera.scroll.x )+0.01;
+					var screenY:Float = y - Camera.scroll.y;
+					age -= FlxG.elapsed;
 					gfx.beginFill(color);
 					gfx.lineStyle();
-					gfx.drawRect(x - size, y, size, 1);
-					gfx.drawRect(x, y - size, 1, size);
-					gfx.drawRect(x + 1, y, size, 1);
-					gfx.drawRect(x, y + 1, 1, size);
+					gfx.drawRect(screenX - size, screenY, size, 1);
+					gfx.drawRect(screenX, screenY - size, 1, size);
+					gfx.drawRect(screenX + 1, screenY, size, 1);
+					gfx.drawRect(screenX, screenY + 1, 1, size);
 					gfx.endFill();
-				case TEXT(x, y, text):
-					x -= Camera.scroll.x;
-					y -= Camera.scroll.y;
+					if (age > 0) add(CROSS(x, y, size, color, age));
+				case TEXT(x, y, text, age):
+					var screenX:Float = x - Camera.scroll.x;
+					var screenY:Float = y - Camera.scroll.y;
+					age -= FlxG.elapsed;
 					gfx.lineStyle();
-					TempestaSeven.render(text, gfx, x, y);
-				case RECT(x, y, w, h, color, opacity):
-					x = Math.ffloor( x - Camera.scroll.x )+0.01;
-					y -= - Camera.scroll.y;
+					TempestaSeven.render(text, gfx, screenX, screenY);
+					if (age > 0) add(TEXT(x, y, text, age));
+				case RECT(x, y, w, h, color, opacity, age):
+					var screenX:Float = Math.ffloor( x - Camera.scroll.x )+0.01;
+					var screenY:Float = y - Camera.scroll.y;
+					age -= FlxG.elapsed;
 					gfx.beginFill(color, opacity);
 					gfx.lineStyle(1, color);
-					gfx.drawRect(x, y, w, h);
+					gfx.drawRect(screenX, screenY, w, h);
 					gfx.endFill();
-				case LINE(x, y, x2, y2, color):
-					x -= Camera.scroll.x;
-					y -= Camera.scroll.y;
-					x2 -= Camera.scroll.x;
-					y2 -= Camera.scroll.y;
+					if (age > 0) add(RECT(x, y, w, h, color, opacity, age));
+				case LINE(x, y, x2, y2, color, age):
+					var screenX:Float = x - Camera.scroll.x;
+					var screenY:Float = y - Camera.scroll.y;
+					var screenX2:Float = x2 - Camera.scroll.x;
+					var screenY2:Float = y2 - Camera.scroll.y;
+					age -= FlxG.elapsed;
 					if (x != x2 && y != y2)
 					{
 						gfx.lineStyle(1, color);
-						gfx.moveTo(x, y);
-						gfx.lineTo(x2, y2);
+						gfx.moveTo(screenX, screenY);
+						gfx.lineTo(screenX2, screenY2);
 					}
 					else
 					{
@@ -124,16 +137,17 @@ class VisualDebug extends FlxBasic
 						gfx.beginFill(color);
 						if (x == x2)
 						{
-							gfx.drawRect(x, y, 1, y2 - y);
+							gfx.drawRect(screenX, screenY, 1, screenY2 - screenY);
 						}
 						else
 						{
-							gfx.drawRect(x, y, x2-x, 1);
+							gfx.drawRect(screenX, screenY, screenX2-screenX, 1);
 						}
 						gfx.endFill();
 					}
+					if (age > 0) add(LINE(x, y, x2, y2, color, age));
 			}
-			s = stack.shift();
+			s = copy.shift();
 		}
 		
 		#if flash
@@ -148,20 +162,21 @@ class VisualDebug extends FlxBasic
 	 * @param	Diameter	The size of the shape
 	 * @param	Color	Color of the shape. Compatible with FlxColor values
 	 * @param	Print	Whether to print the coordinates next to the point
+	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false):Void
+	public static function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
 		if (Color == -1) Color = defaultColor;
 		
-		inst.add(POINT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color)));
+		inst.add(POINT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
 		
 		if (Print)
 		{
 			X = Math.ffloor(X);
 			Y = Math.ffloor(Y);
-			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}'));
+			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
 		}
 	}
 	
@@ -172,19 +187,20 @@ class VisualDebug extends FlxBasic
 	 * @param	Radius	The size of the shape
 	 * @param	Color	Color of the shape. Compatible with FlxColor values.
 	 * @param	Print	Whether to print the coordinates next to the cross
+	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false):Void
+	public static function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
 		if (Color == -1) Color = defaultColor;
-		inst.add(CROSS(X, Y, Radius, FlxColorUtil.RGBAtoRGB(Color)));
+		inst.add(CROSS(X, Y, Radius, FlxColorUtil.RGBAtoRGB(Color), Age));
 		
 		if (Print)
 		{
 			X = Math.ffloor(X);
 			Y = Math.ffloor(Y);
-			inst.add(TEXT(X + 3, Y - 12, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}'));
+			inst.add(TEXT(X + 3, Y - 12, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
 		}
 	}
 	
@@ -193,12 +209,13 @@ class VisualDebug extends FlxBasic
 	 * @param	X	The X coordinate in world space
 	 * @param	Y	The Y coordinate in world space
 	 * @param	Text	The text to print out
+	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawText(X:Float, Y:Float, Text:String):Void
+	public static function drawText(X:Float, Y:Float, Text:String, Age:Float = 0):Void
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		inst.add(TEXT(X, Y, Text));
+		inst.add(TEXT(X, Y, Text, Age));
 	}
 	
 	/**
@@ -210,17 +227,18 @@ class VisualDebug extends FlxBasic
 	 * @param	Color	Color of the shape. Compatible with FlxColor values.
 	 * @param	Opacity	The opacity of the fill
 	 * @param	Print	Text to print above the rectangle
+	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null):Void
+	public static function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null, Age:Float = 0):Void
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
 		if (Color == -1) Color = defaultColor;
-		inst.add(RECT(X, Y, Width, Height, FlxColorUtil.RGBAtoRGB(Color), Opacity));
+		inst.add(RECT(X, Y, Width, Height, FlxColorUtil.RGBAtoRGB(Color), Opacity, Age));
 		
 		if (Print != null)
 		{
-			inst.add(TEXT(X, Y - 14, Print));
+			inst.add(TEXT(X, Y - 14, Print, Age));
 		}
 	}
 	
@@ -231,13 +249,14 @@ class VisualDebug extends FlxBasic
 	 * @param	EndX	Ending X coordinate in world space
 	 * @param	EndY	Ending Y coordinate in world space
 	 * @param	Color	Color of the line. Compatible with FlxColor values.
+	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1)
+	public static function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1, Age:Float = 0)
 	{
 		var inst:VisualDebug = instance();
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
 		if (Color == -1) Color = defaultColor;
-		inst.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color)));
+		inst.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color), Age));
 		
 	}
 	
@@ -245,9 +264,9 @@ class VisualDebug extends FlxBasic
 
 enum Shapes
 {
-	POINT(x:Float, y:Float, size:Float, color:Int);
-	CROSS(x:Float, y:Float, size:Float, color:Int);
-	TEXT(x:Float, y:Float, text:String);
-	RECT(x:Float, y:Float, w:Float, h:Float, color:Int, opacity:Float);
-	LINE(x:Float, y:Float, x2:Float, y2:Float, color:Int);
+	POINT(x:Float, y:Float, size:Float, color:Int, age:Float);
+	CROSS(x:Float, y:Float, size:Float, color:Int, age:Float);
+	TEXT(x:Float, y:Float, text:String, age:Float);
+	RECT(x:Float, y:Float, w:Float, h:Float, color:Int, opacity:Float, age:Float);
+	LINE(x:Float, y:Float, x2:Float, y2:Float, color:Int, age:Float);
 }

@@ -19,3 +19,7 @@ How to use:
     VisualDebug.drawPoint(x - 20, y - 20, 4, FlxColor.RED);
     VisualDebug.drawRect(x + 40, y, 40, 20, -1, 0.5, "A Rectangle");
     VisualDebug.drawText(x + 40, y + 40, "1 up!");
+    if (FlxRandom.chanceRoll(1))
+    {
+        VisualDebug.drawText(x + 40, y - 20, "Boo!", 0.5);
+    }
