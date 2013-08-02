@@ -1,21 +1,15 @@
 package flixel.plugin;
 
-import flash.display.BitmapData;
-import flash.geom.Matrix;
+import flash.display.Graphics;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
-import haxe.ds.GenericStack;
-import haxe.ds.Vector;
-import haxe.EnumTools;
-import flixel.util.FlxColor;
 import flixel.FlxG;
-import flash.display.Graphics;
-import flixel.util.FlxSpriteUtil;
-import flixel.util.FlxColorUtil;
 import flixel.text.TempestaSeven;
+import flixel.util.FlxColorUtil;
+import flixel.util.FlxSpriteUtil;
 
 /**
- * ...
+ * A plugin for easily drawing simple shapes on the visual debug screen.
  * @author Pekka Heikkinen
  */
 class VisualDebug extends FlxBasic
