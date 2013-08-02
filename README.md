@@ -7,8 +7,15 @@ A hopefully growing collection of plugins and experiments for HaxeFlixel.
 
 ![drawCross() with position data](VisualDebug.png)
 
-This plugin was created for the sole purpose of drawing debug information on the screen a lot easier. Initially there are only three types of graphics - a point, a cross and text - but the intention is to grow to drawing lines, rectangles and whatnot.
+This plugin was created for the sole purpose of drawing debug information on the screen a lot easier. There are only a handful of basic types right now, but the number will grow should the need arise.
 
 How to use:
 
-    VisualDebug.instance().drawPoint(16,18);
+    var x:Float = entity.getHitbox().x;
+    var y:Float = entity.getHitbox().y;
+
+    VisualDebug.drawCross(x + 20, y - 20, 4, -1, true);
+    VisualDebug.drawLine(x, y, x - 20, y - 20, FlxColor.CYAN);
+    VisualDebug.drawPoint(x - 20, y - 20, 4, FlxColor.RED);
+    VisualDebug.drawRect(x + 40, y, 40, 20, -1, 0.5, "A Rectangle");
+    VisualDebug.drawText(x + 40, y + 40, "1 up!");

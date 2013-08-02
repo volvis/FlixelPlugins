@@ -21,18 +21,21 @@ import flixel.text.TempestaSeven;
 class VisualDebug extends FlxBasic
 {
 	
-	private var stack:Array<DebugShape>;
-	public static var textStack:Array<String>;
+	private var stack:Array<Shapes>;
+	
+	/**
+	 * The color that is used if the color provided equals -1
+	 */
+	public static var defaultColor:Int = 0xffffffff;
 	
 	public function new() 
 	{
 		super();
-		stack = new Array<DebugShape>();
-		textStack = new Array<String>();
+		stack = new Array<Shapes>();
 		active = false;
 	}
 	
-	public static function instance():VisualDebug
+	private static function instance():VisualDebug
 	{
 		var vd:VisualDebug = cast FlxG.plugins.get(VisualDebug);
 		if (vd == null)
@@ -43,112 +46,25 @@ class VisualDebug extends FlxBasic
 		return vd;
 	}
 	
+	private function add(Sh:Shapes):Void
+	{
+		stack.push(Sh);
+	}
+	
 	/**
 	 * Clean up memory.
 	 */
 	override public function destroy():Void
 	{
 		stack = null;
-		textStack = null;
 		super.destroy();
 	}
 	
-	override public function drawDebug():Void
-	{
-		super.drawDebug();
-		if (textStack.length != 0) textStack = new Array<String>();
-	}
+	/**
+	 * Drawing methods
+	 */
 	
 	override public function drawDebugOnCamera(?Camera:FlxCamera):Void
-	{
-		if (Camera == null)
-		{
-			Camera = FlxG.camera;
-		}
-		
-		var s:DebugShape = stack.shift();
-		while(s != null)
-		{
-			s.draw(Camera);
-			s = stack.shift();
-		}
-	}
-	
-	public function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = 0xffffffff, Print:Bool = false):Void
-	{
-		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
-		var s:DebugShape = new DebugShape();
-		s.setShape(DebugShape.POINT);
-		s.setStartX(Std.int(X));
-		s.setStartY(Std.int(Y));
-		s.setColor(Color);
-		s.setDiameter(Diameter);
-		stack.push(s);
-		
-		if (Print)
-		{
-			X = Math.ffloor(X);
-			Y = Math.ffloor(Y);
-			drawText(X + 3, Y - 12, 'X:$X Y:$Y');
-		}
-	}
-	
-	public function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = 0xffffffff, Print:Bool = false):Void
-	{
-		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
-		var s:DebugShape = new DebugShape();
-		s.setShape(DebugShape.CROSS);
-		s.setStartX(Std.int(X));
-		s.setStartY(Std.int(Y));
-		s.setColor(Color);
-		s.setDiameter(Radius*2);
-		stack.push(s);
-		
-		if (Print)
-		{
-			X = Math.ffloor(X);
-			Y = Math.ffloor(Y);
-			drawText(X + 3, Y - 12, 'X:$X Y:$Y');
-		}
-	}
-	
-	public function drawText(X:Float, Y:Float, Text:String):Void
-	{
-		if (!FlxG.debugger.visualDebug || ignoreDrawDebug) return;
-		var s:DebugShape = new DebugShape();
-		s.setShape(DebugShape.TEXT);
-		s.setStartX(Std.int(X));
-		s.setStartY(Std.int(Y));
-		s.setText(textStack.length);
-		textStack.push(Text);
-		stack.push(s);
-	}
-	
-}
-
-
-
-abstract DebugShape(Vector<Int>)
-{
-	public static inline var POINT:Int = 1;
-	public static inline var CROSS:Int = 2;
-	public static inline var TEXT:Int = 3;
-	
-	private static inline var SHAPE_INDEX:Int = 0;
-	private static inline var COLOR_INDEX:Int = 1;
-	private static inline var START_X_INDEX:Int = 2;
-	private static inline var START_Y_INDEX:Int = 3;
-	private static inline var END_X_INDEX:Int = 4;
-	private static inline var END_Y_INDEX:Int = 5;
-	private static inline var DIAMETER_INDEX:Int = 6;
-	private static inline var TEXT_INDEX:Int = 7;
-	
-	public inline function new()
-	{
-		this = new Vector<Int>(8);
-	}
-	
-	public inline function draw(Camera:FlxCamera = null):Void
 	{
 		if (Camera == null)
 		{
@@ -162,37 +78,68 @@ abstract DebugShape(Vector<Int>)
 		var gfx:Graphics = Camera._debugLayer.graphics;
 		#end
 		
-		switch (getShape())
+		var s:Shapes = stack.shift();
+		while(s != null)
 		{
-			case POINT:
-				var x:Float = getStartX() - Camera.scroll.x;
-				var y:Float = getStartY() - Camera.scroll.y;
-				//if (!onScreen(x, y)) continue;
-				var d:Float = getDiameter();
-				var dHalf:Float = d / 2;
-				gfx.beginFill(getColor(), 0.5);
-				gfx.lineStyle(1, getColor());
-				gfx.drawRect(x - dHalf, y - dHalf, d, d);
-				gfx.endFill();
-			case CROSS:
-				var x:Float = Math.ffloor( getStartX() - Camera.scroll.x )+0.01;
-				var y:Float = getStartY() - Camera.scroll.y;
-				//if (onScreen(x, y)) continue;
-				var d:Float = getDiameter();
-				var dHalf:Float = d / 2;
-				gfx.beginFill(getColor());
-				gfx.lineStyle();
-				gfx.drawRect(x - dHalf, y, dHalf, 1);
-				gfx.drawRect(x, y - dHalf, 1, dHalf);
-				gfx.drawRect(x + 1, y, dHalf, 1);
-				gfx.drawRect(x, y + 1, 1, dHalf);
-				gfx.endFill();
-			case TEXT:
-				var x:Float = getStartX() - Camera.scroll.x;
-				var y:Float = getStartY() - Camera.scroll.y;
-				var text:String = VisualDebug.textStack[getText()];
-				TempestaSeven.render(text, gfx, x, y);
-			default: null;
+			switch (s)
+			{
+				case POINT(x, y, size, color):
+					x -= Camera.scroll.x;
+					y -= Camera.scroll.y;
+					var offset:Float = size/2;
+					gfx.beginFill(color, 0.5);
+					gfx.lineStyle(1, color);
+					gfx.drawRect(x - offset, y - offset, size, size);
+					gfx.endFill();
+				case CROSS(x, y, size, color):
+					x = Math.ffloor( x - Camera.scroll.x )+0.01;
+					y -= - Camera.scroll.y;
+					gfx.beginFill(color);
+					gfx.lineStyle();
+					gfx.drawRect(x - size, y, size, 1);
+					gfx.drawRect(x, y - size, 1, size);
+					gfx.drawRect(x + 1, y, size, 1);
+					gfx.drawRect(x, y + 1, 1, size);
+					gfx.endFill();
+				case TEXT(x, y, text):
+					x -= Camera.scroll.x;
+					y -= Camera.scroll.y;
+					gfx.lineStyle();
+					TempestaSeven.render(text, gfx, x, y);
+				case RECT(x, y, w, h, color, opacity):
+					x = Math.ffloor( x - Camera.scroll.x )+0.01;
+					y -= - Camera.scroll.y;
+					gfx.beginFill(color, opacity);
+					gfx.lineStyle(1, color);
+					gfx.drawRect(x, y, w, h);
+					gfx.endFill();
+				case LINE(x, y, x2, y2, color):
+					x -= Camera.scroll.x;
+					y -= Camera.scroll.y;
+					x2 -= Camera.scroll.x;
+					y2 -= Camera.scroll.y;
+					if (x != x2 && y != y2)
+					{
+						gfx.lineStyle(1, color);
+						gfx.moveTo(x, y);
+						gfx.lineTo(x2, y2);
+					}
+					else
+					{
+						gfx.lineStyle();
+						gfx.beginFill(color);
+						if (x == x2)
+						{
+							gfx.drawRect(x, y, 1, y2 - y);
+						}
+						else
+						{
+							gfx.drawRect(x, y, x2-x, 1);
+						}
+						gfx.endFill();
+					}
+			}
+			s = stack.shift();
 		}
 		
 		#if flash
@@ -200,39 +147,74 @@ abstract DebugShape(Vector<Int>)
 		#end
 	}
 	
-	private inline function onScreen(x:Float, y:Float):Bool
+	
+	public static function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false):Void
 	{
-		if (x < 0 || y < 0) 
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		if (Color == -1) Color = defaultColor;
+		
+		inst.add(POINT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color)));
+		
+		if (Print)
 		{
-			return false;
-		}
-		else if (x > FlxG.width || y > FlxG.height)
-		{
-			return false;
-		}
-		else
-		{			
-			return true;
+			X = Math.ffloor(X);
+			Y = Math.ffloor(Y);
+			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}'));
 		}
 	}
 	
-	public inline function getShape():Int return this.get(SHAPE_INDEX);
-	public inline function setShape(V:Int):Void this.set(SHAPE_INDEX, V);
+	public static function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false):Void
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		if (Color == -1) Color = defaultColor;
+		inst.add(CROSS(X, Y, Radius, FlxColorUtil.RGBAtoRGB(Color)));
+		
+		if (Print)
+		{
+			X = Math.ffloor(X);
+			Y = Math.ffloor(Y);
+			inst.add(TEXT(X + 3, Y - 12, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}'));
+		}
+	}
 	
-	public inline function getColor():Int return FlxColorUtil.RGBAtoRGB(this.get(COLOR_INDEX));
-	public inline function getColorRGBA():Int return this.get(COLOR_INDEX);
-	public inline function setColor(V:Int):Void this.set(COLOR_INDEX, V);
+	public static function drawText(X:Float, Y:Float, Text:String):Void
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		inst.add(TEXT(X, Y, Text));
+	}
 	
-	public inline function getStartX():Int return this.get(START_X_INDEX);
-	public inline function setStartX(V:Int):Void this.set(START_X_INDEX, V);
+	public static function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null):Void
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		if (Color == -1) Color = defaultColor;
+		inst.add(RECT(X, Y, Width, Height, FlxColorUtil.RGBAtoRGB(Color), Opacity));
+		
+		if (Print != null)
+		{
+			inst.add(TEXT(X, Y - 14, Print));
+		}
+	}
 	
-	public inline function getStartY():Int return this.get(START_Y_INDEX);
-	public inline function setStartY(V:Int):Void this.set(START_Y_INDEX, V);
+	public static function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1)
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		if (Color == -1) Color = defaultColor;
+		inst.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color)));
+		
+	}
 	
-	public inline function getDiameter():Int return this.get(DIAMETER_INDEX);
-	public inline function setDiameter(V:Int):Void this.set(DIAMETER_INDEX, V);
-	
-	public inline function getText():Int return this.get(TEXT_INDEX);
-	public inline function setText(V:Int):Void this.set(TEXT_INDEX, V);
-	
+}
+
+enum Shapes
+{
+	POINT(x:Float, y:Float, size:Float, color:Int);
+	CROSS(x:Float, y:Float, size:Float, color:Int);
+	TEXT(x:Float, y:Float, text:String);
+	RECT(x:Float, y:Float, w:Float, h:Float, color:Int, opacity:Float);
+	LINE(x:Float, y:Float, x2:Float, y2:Float, color:Int);
 }

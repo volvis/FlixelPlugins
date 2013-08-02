@@ -31,6 +31,8 @@ class TempestaSeven
 	 */
 	public static function render(Text:String, Graphic:Graphics, X:Float = 0, Y:Float = 0):Void
 	{
+		X = Math.ffloor(X);
+		Y = Math.ffloor(Y);
 		if (font == null)
 		{
 			font = new Font(Assets.getText("flixel/img/debugger/TempestaSeven.fnt"));
