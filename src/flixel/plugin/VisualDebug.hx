@@ -16,49 +16,50 @@ import flixel.util.FlxSpriteUtil;
 class VisualDebug extends FlxBasic
 {
 	
-	private var stack:Array<Shapes>;
-	
 	/**
 	 * The color that is used if the color provided equals -1
 	 */
 	public static var defaultColor:Int = 0xffffffff;
 	
+	private static var ShapeStack:Array<Shapes>;
+	private static var VisualDebugInstance:VisualDebug;
+	
 	public function new() 
 	{
 		super();
-		stack = new Array<Shapes>();
+		ShapeStack = new Array<Shapes>();
+		VisualDebugInstance = this;
 		active = false;
 	}
 	
-	private static function instance():VisualDebug
+	private static inline function initialize():Void
 	{
-		var vd:VisualDebug = cast FlxG.plugins.get(VisualDebug);
-		if (vd == null)
+		if (VisualDebugInstance == null)
 		{
-			vd = new VisualDebug();
-			FlxG.plugins.add(vd);
+			FlxG.plugins.add(new VisualDebug());
 		}
-		return vd;
 	}
 	
-	private function add(Sh:Shapes):Void
+	private inline function add(Sh:Shapes):Void
 	{
-		stack.push(Sh);
+		ShapeStack.push(Sh);
 	}
 	
 	/**
 	 * Clean up memory.
 	 */
+	#if !FLX_NO_DEBUG
 	override public function destroy():Void
 	{
-		stack = null;
+		ShapeStack = null;
 		super.destroy();
 	}
+	#end
 	
 	/**
 	 * Drawing methods
 	 */
-	
+	#if !FLX_NO_DEBUG
 	override public function drawDebugOnCamera(?Camera:FlxCamera):Void
 	{
 		if (Camera == null)
@@ -73,9 +74,8 @@ class VisualDebug extends FlxBasic
 		var gfx:Graphics = Camera._debugLayer.graphics;
 		#end
 		
-		// Work on a copy so we can add new draw commands for the next round as we go through the list
-		var copy:Array<Shapes> = stack.copy();
-		stack = new Array<Shapes>();
+		var copy:Array<Shapes> = ShapeStack.copy();
+		ShapeStack = new Array<Shapes>();
 		
 		var s:Shapes = copy.shift();
 		while(s != null)
@@ -165,6 +165,7 @@ class VisualDebug extends FlxBasic
 		Camera.buffer.draw(FlxSpriteUtil.flashGfxSprite);
 		#end
 	}
+	#end
 	
 	/**
 	 * Draw a point on screen
@@ -175,20 +176,22 @@ class VisualDebug extends FlxBasic
 	 * @param	Print	Whether to print the coordinates next to the point
 	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
+	public static inline function drawPoint(X:Float, Y:Float, Diameter:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		if (Color == -1) Color = defaultColor;
-		
-		inst.add(POINT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
-		
-		if (Print)
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
 		{
-			X = Math.ffloor(X);
-			Y = Math.ffloor(Y);
-			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
+			if (Color == -1) Color = defaultColor;
+			VisualDebugInstance.add(POINT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
+			if (Print)
+			{
+				X = Math.ffloor(X);
+				Y = Math.ffloor(Y);
+				VisualDebugInstance.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:$X Y:$Y', Age));
+			}
 		}
+		#end
 	}
 	
 	/**
@@ -200,19 +203,22 @@ class VisualDebug extends FlxBasic
 	 * @param	Print	Whether to print the coordinates next to the cross
 	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
+	public static inline function drawCross(X:Float, Y:Float, Radius:Int = 4, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		if (Color == -1) Color = defaultColor;
-		inst.add(CROSS(X, Y, Radius, FlxColorUtil.RGBAtoRGB(Color), Age));
-		
-		if (Print)
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
 		{
-			X = Math.ffloor(X);
-			Y = Math.ffloor(Y);
-			inst.add(TEXT(X + 3, Y - 12, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
+			if (Color == -1) Color = defaultColor;
+			VisualDebugInstance.add(CROSS(X, Y, Radius, FlxColorUtil.RGBAtoRGB(Color), Age));
+			if (Print)
+			{
+				X = Math.ffloor(X);
+				Y = Math.ffloor(Y);
+				VisualDebugInstance.add(TEXT(X + 3, Y - 12, 'X:$X Y:$Y', Age));
+			}
 		}
+		#end
 	}
 	
 	/**
@@ -222,11 +228,15 @@ class VisualDebug extends FlxBasic
 	 * @param	Text	The text to print out
 	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawText(X:Float, Y:Float, Text:String, Age:Float = 0):Void
+	public static inline function drawText(X:Float, Y:Float, Text:String, Age:Float = 0):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		inst.add(TEXT(X, Y, Text, Age));
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
+		{
+			VisualDebugInstance.add(TEXT(X, Y, Text, Age));
+		}
+		#end
 	}
 	
 	/**
@@ -240,17 +250,21 @@ class VisualDebug extends FlxBasic
 	 * @param	Print	Text to print above the rectangle
 	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null, Age:Float = 0):Void
+	public static inline function drawRect(X:Float, Y:Float, Width:Float, Height:Float, Color:Int = -1, Opacity:Float = 0.5, Print:String = null, Age:Float = 0):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		if (Color == -1) Color = defaultColor;
-		inst.add(RECT(X, Y, Width, Height, FlxColorUtil.RGBAtoRGB(Color), Opacity, Age));
-		
-		if (Print != null)
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
 		{
-			inst.add(TEXT(X, Y - 14, Print, Age));
+			if (Color == -1) Color = defaultColor;
+			VisualDebugInstance.add(RECT(X, Y, Width, Height, FlxColorUtil.RGBAtoRGB(Color), Opacity, Age));
+			
+			if (Print != null)
+			{
+				VisualDebugInstance.add(TEXT(X, Y - 14, Print, Age));
+			}
 		}
+		#end
 	}
 	
 	/**
@@ -262,28 +276,36 @@ class VisualDebug extends FlxBasic
 	 * @param	Color	Color of the line. Compatible with FlxColor values.
 	 * @param	Age		How long in seconds the shape should stay on screen
 	 */
-	public static function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1, Age:Float = 0)
+	public static inline function drawLine(StartX:Float, StartY:Float, EndX:Float, EndY:Float, Color:Int = -1, Age:Float = 0)
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		if (Color == -1) Color = defaultColor;
-		inst.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color), Age));
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
+		{
+			if (Color == -1) Color = defaultColor;			
+			VisualDebugInstance.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color), Age));
+		}
+		#end
 	}
 	
-	public static function drawDot(X:Float, Y:Float, Diameter:Int = 2, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
+	public static inline function drawDot(X:Float, Y:Float, Diameter:Int = 2, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		if (Color == -1) Color = defaultColor;
-		
-		inst.add(DOT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
-		
-		if (Print)
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
 		{
-			X = Math.ffloor(X);
-			Y = Math.ffloor(Y);
-			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
+			if (Color == -1) Color = defaultColor;
+			
+			VisualDebugInstance.add(DOT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
+			
+			if (Print)
+			{
+				X = Math.ffloor(X);
+				Y = Math.ffloor(Y);
+				VisualDebugInstance.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
+			}
 		}
+		#end
 	}
 	
 	/**
@@ -292,32 +314,35 @@ class VisualDebug extends FlxBasic
 	 * @param	Length	Length of the hilight edge
 	 * @param	Color	Color of the line. Compatible with FlxColor values.
 	 */
-	public static function hilight(Object:FlxObject, Length:Int = 4, Color:Int = -1):Void
+	public static inline function hilight(Object:FlxObject, Length:Int = 4, Color:Int = -1):Void
 	{
-		var inst:VisualDebug = instance();
-		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
-		
-		if (Color == -1) Color = defaultColor;
-		Color = FlxColorUtil.RGBAtoRGB(Color);
-		
-		var x1:Int = Std.int(Object.x);
-		var y1:Int = Std.int(Object.y);
-		var x2:Int = Std.int(Object.x+Object.width);
-		var y2:Int = Std.int(Object.y+Object.height);
-		
-		var offset:Int = 2 + (Date.now().getSeconds() % 2);
-		
-		inst.add(LINE( x1 - offset, y1 - offset, x1 - offset, y1 - offset + Length, Color, 0 ));
-		inst.add(LINE( x1 - offset, y1 - offset, x1 - offset + Length, y1 - offset, Color, 0 ));
-		
-		inst.add(LINE( x1 - offset, y2 + offset, x1 - offset, y2 + offset - Length + 1, Color, 0 ));
-		inst.add(LINE( x1 - offset, y2 + offset, x1 - offset + Length, y2 + offset, Color, 0 ));
-		
-		inst.add(LINE( x2 + offset, y1 - offset, x2 + offset, y1 - offset + Length, Color, 0 ));
-		inst.add(LINE( x2 + offset, y1 - offset, x2 + offset - Length + 1, y1 - offset, Color, 0 ));
-		
-		inst.add(LINE( x2 + offset, y2 + offset+1, x2 + offset, y2 + offset - Length + 1, Color, 0 ));
-		inst.add(LINE( x2 + offset, y2 + offset, x2 + offset - Length + 1, y2 + offset, Color, 0 ));
+		#if !FLX_NO_DEBUG
+		initialize();
+		if (FlxG.debugger.visualDebug && !VisualDebugInstance.ignoreDrawDebug)
+		{
+			if (Color == -1) Color = defaultColor;
+			Color = FlxColorUtil.RGBAtoRGB(Color);
+			
+			var x1:Int = Std.int(Object.x);
+			var y1:Int = Std.int(Object.y);
+			var x2:Int = Std.int(Object.x+Object.width);
+			var y2:Int = Std.int(Object.y+Object.height);
+			
+			var offset:Int = 2 + (Date.now().getSeconds() % 2);
+			
+			VisualDebugInstance.add(LINE( x1 - offset, y1 - offset, x1 - offset, y1 - offset + Length, Color, 0 ));
+			VisualDebugInstance.add(LINE( x1 - offset, y1 - offset, x1 - offset + Length, y1 - offset, Color, 0 ));
+			
+			VisualDebugInstance.add(LINE( x1 - offset, y2 + offset, x1 - offset, y2 + offset - Length + 1, Color, 0 ));
+			VisualDebugInstance.add(LINE( x1 - offset, y2 + offset, x1 - offset + Length, y2 + offset, Color, 0 ));
+			
+			VisualDebugInstance.add(LINE( x2 + offset, y1 - offset, x2 + offset, y1 - offset + Length, Color, 0 ));
+			VisualDebugInstance.add(LINE( x2 + offset, y1 - offset, x2 + offset - Length + 1, y1 - offset, Color, 0 ));
+			
+			VisualDebugInstance.add(LINE( x2 + offset, y2 + offset+1, x2 + offset, y2 + offset - Length + 1, Color, 0 ));
+			VisualDebugInstance.add(LINE( x2 + offset, y2 + offset, x2 + offset - Length + 1, y2 + offset, Color, 0 ));
+		}
+		#end
 	}
 	
 }
