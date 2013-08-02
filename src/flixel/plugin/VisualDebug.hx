@@ -91,6 +91,17 @@ class VisualDebug extends FlxBasic
 					gfx.drawRect(screenX - offset, screenY - offset, size, size);
 					gfx.endFill();
 					if (age > 0) add(POINT(x, y, size, color, age));
+				case DOT(x, y, size, color, age):
+					var screenX:Float = x - Camera.scroll.x;
+					var screenY:Float = y - Camera.scroll.y;
+					age -= FlxG.elapsed;
+					var offset:Float = size/2;
+					gfx.beginFill(color, 0.5);
+					gfx.lineStyle(1, color);
+					//gfx.drawRect(screenX - offset, screenY - offset, size, size);
+					gfx.drawCircle(screenX, screenY, size);
+					gfx.endFill();
+					if (age > 0) add(POINT(x, y, size, color, age));
 				case CROSS(x, y, size, color, age):
 					var screenX:Float = Math.ffloor( x - Camera.scroll.x )+0.01;
 					var screenY:Float = y - Camera.scroll.y;
@@ -257,7 +268,22 @@ class VisualDebug extends FlxBasic
 		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
 		if (Color == -1) Color = defaultColor;
 		inst.add(LINE(StartX, StartY, EndX, EndY, FlxColorUtil.RGBAtoRGB(Color), Age));
+	}
+	
+	public static function drawDot(X:Float, Y:Float, Diameter:Int = 2, Color:Int = -1, Print:Bool = false, Age:Float = 0):Void
+	{
+		var inst:VisualDebug = instance();
+		if (!FlxG.debugger.visualDebug || inst.ignoreDrawDebug) return;
+		if (Color == -1) Color = defaultColor;
 		
+		inst.add(DOT(X, Y, Diameter, FlxColorUtil.RGBAtoRGB(Color), Age));
+		
+		if (Print)
+		{
+			X = Math.ffloor(X);
+			Y = Math.ffloor(Y);
+			inst.add(TEXT(X + (Diameter/2)+2, Y - 14, 'X:${Math.ffloor(X)} Y:${Math.ffloor(Y)}', Age));
+		}
 	}
 	
 }
@@ -269,4 +295,5 @@ enum Shapes
 	TEXT(x:Float, y:Float, text:String, age:Float);
 	RECT(x:Float, y:Float, w:Float, h:Float, color:Int, opacity:Float, age:Float);
 	LINE(x:Float, y:Float, x2:Float, y2:Float, color:Int, age:Float);
+	DOT(x:Float, y:Float, size:Float, color:Int, age:Float);
 }

@@ -23,3 +23,15 @@ How to use:
     {
         VisualDebug.drawText(x + 40, y - 20, "Boo!", 0.5);
     }
+
+
+### Misc examples
+
+![Example](VisualDebug_age.png]
+
+Every shape can be given an age so you could, for example, track the flight path of a shape.
+
+	if (hb.x != hb.last.x || hb.y != hb.last.y)
+	{
+		VisualDebug.drawLine(hb.x, hb.y, hb.last.x, hb.last.y, FlxColor.GRAY, 2.0);
+	}
