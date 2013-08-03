@@ -45,7 +45,7 @@ You can use VisualDebug.hilight() to bring focus to individual FlxObjects.
 
 ## AbstractObjectGroup.hx
 
-This is an experimental typed interface for FlxTypedGroup<FlxObject>. It behaves somewhat identical to FlxSpriteGroup, except it works with FlxObjects. It's designed for situations where you have an entity that consists of one hitbox and one or more sprites for graphic.
+This is an experimental typed interface for <code>FlxTypedGroup<FlxObject></code>. It behaves somewhat identical to FlxSpriteGroup, except it works with FlxObjects. It's designed for situations where you have an entity that consists of one hitbox and one or more sprites for graphic.
 
 	var AOG:AbstractObjectGroup = AbstractObjectGroup.createNew();
 	trace(AOG.hitbox);
