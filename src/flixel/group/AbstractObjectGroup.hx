@@ -6,16 +6,39 @@ import flixel.FlxBasic;
 import flixel.FlxG;
 
 /**
- * Experimental abstract group
+ * Experimental abstract group.
+ * This is not a real object, only a typed interface for FlxTypedGroup<FlxObject>.
+ * It has no negative effect on speed since all methods will be inlined.
  * @author Pekka Heikkinen
  */
-abstract FlxObjectGroup(FlxTypedGroup<FlxObject>)
+abstract AbstractObjectGroup(FlxTypedGroup<FlxObject>)
 {
 
-	public inline function new(MaxSize:Int = 0):FlxTypedGroup<FlxObject>
+	inline function new(Group)
 	{
-		this = new FlxTypedGroup<FlxObject>(MaxSize);
-		this.add(new FlxObject());
+		this = Group;
+	}
+	
+	/**
+	 * Creates a new FlxTypedGroup<FlxObject> with one FlxObject to serve as a hitbox
+	 * @param	MaxSize
+	 * @return	An FlxObjectGroup for the created group
+	 */
+	public static inline function createNew(MaxSize:Int = 0):AbstractObjectGroup
+	{
+		var gr = new FlxTypedGroup<FlxObject>(MaxSize);
+		gr.add(new FlxObject());
+		return new AbstractObjectGroup(gr);
+	}
+	
+	/**
+	 * Turns an FlxTypedGroup<FlxObject> into an FlxObjectGroup construct.
+	 * @param	Group
+	 * @return
+	 */
+	@:from public static inline function createFrom(Group:FlxTypedGroup<FlxObject>):AbstractObjectGroup
+	{
+		return new AbstractObjectGroup(Group);
 	}
 	
 	public var x(get, set):Float;
@@ -24,13 +47,24 @@ abstract FlxObjectGroup(FlxTypedGroup<FlxObject>)
 	public var width(get, set):Float;
 	public var height(get, set):Float;
 	
-	public inline function processCollision(Against:FlxBasic):Void
+	/**
+	 * Contains the first FlxObject of the group, eg. the designated hitbox
+	 */
+	public var hitbox(get, never):FlxObject;
+	
+	/**
+	 * Returns the original FlxTypedGroup<FlxObject>
+	 */
+	public var source(get, never):FlxTypedGroup<FlxObject>;
+	
+	/**
+	 * If the hitbox has moved by either velocity or collision, call this to adjust
+	 * the positions of the rest of the group members.
+	 */
+	public inline function updatePositions():Void
 	{
-		var diffX:Float = hitbox.x;
-		var diffY:Float = hitbox.y;
-		FlxG.collide(hitbox, Against);
-		diffX -= hitbox.x;
-		diffY -= hitbox.y;
+		var diffX:Float = hitbox.x - hitbox.last.x;
+		var diffY:Float = hitbox.y - hitbox.last.y;
 		if (diffX != 0 || diffY != 0)
 		{
 			for (i in new IntIterator(1, this.members.length))
@@ -40,6 +74,7 @@ abstract FlxObjectGroup(FlxTypedGroup<FlxObject>)
 			}
 		}
 	}
+	
 	
 	private inline function get_width():Float
 	{
@@ -127,9 +162,10 @@ abstract FlxObjectGroup(FlxTypedGroup<FlxObject>)
 		return sprite;
 	}
 	
-	public inline function add(Object:FlxObject, PivotX:Float = 0, PivotY:Float = 0):FlxObject
+	public inline function add(Object:FlxObject):FlxObject
 	{
-		toLocal(Object, PivotX, PivotY);
+		Object.x += hitbox.x;
+		Object.y += hitbox.y;
 		return this.add(Object);
 	}
 	
@@ -139,20 +175,13 @@ abstract FlxObjectGroup(FlxTypedGroup<FlxObject>)
 		Object.y += hitbox.y + (hitbox.height * PivotY);
 	}
 	
-	public var length(get, never):Int;
-	private inline function get_length():Int
-	{
-		return (this.members.length - 1);
-	}
 	
-	public var hitbox(get, never):FlxObject;
 	private inline function get_hitbox():FlxObject
 	{
 		return this.members[0];
 	}
 	
-	public var group(get, never):FlxTypedGroup<FlxObject>;
-	@:to private inline function get_group():FlxTypedGroup<FlxObject>
+	@:to private inline function get_source():FlxTypedGroup<FlxObject>
 	{
 		return this;
 	}
