@@ -13,7 +13,7 @@ import flixel.util.FlxSpriteUtil;
  * A plugin for easily drawing simple shapes on the visual debug screen.
  * @author Pekka Heikkinen
  */
-class VisualDebug extends FlxBasic
+class VisualDebug extends FlxPlugin
 {
 	
 	/**
